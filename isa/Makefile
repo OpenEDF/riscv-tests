@@ -2,7 +2,7 @@
 # Makefile for riscv-tests/isa
 #-----------------------------------------------------------------------
 
-XLEN ?= 64
+XLEN ?= 32
 
 src_dir := .
 
@@ -35,11 +35,12 @@ default: all
 # Build rules
 #--------------------------------------------------------------------
 
-RISCV_PREFIX ?= riscv$(XLEN)-unknown-elf-
+RISCV_PREFIX ?= riscv64-unknown-elf-
 RISCV_GCC ?= $(RISCV_PREFIX)gcc
 RISCV_GCC_OPTS ?= -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles
 RISCV_OBJDUMP ?= $(RISCV_PREFIX)objdump --disassemble-all --disassemble-zeroes --section=.text --section=.text.startup --section=.text.init --section=.data
 RISCV_SIM ?= spike
+RISCV_OBJCOPY ?= $(RISCV_PREFIX)objcopy -O verilog
 
 vpath %.S $(src_dir)
 
@@ -48,12 +49,13 @@ vpath %.S $(src_dir)
 
 %.dump: %
 	$(RISCV_OBJDUMP) $< > $@
+	$(RISCV_OBJCOPY) $<   $<.verilog
 
 %.out: %
 	$(RISCV_SIM) --isa=rv64gc_zfh_zicboz_svnapot_zicntr --misaligned $< 2> $@
 
 %.out32: %
-	$(RISCV_SIM) --isa=rv32gc_zfh_zicboz_svnapot_zicntr --misaligned $< 2> $@
+	$(RISCV_SIM) --isa=rv32gc_zfh $< 2> $@
 
 define compile_template
 
@@ -103,13 +105,14 @@ $(eval $(call compile_template,rv64mi,-march=rv64g -mabi=lp64))
 endif
 
 tests_dump = $(addsuffix .dump, $(tests))
+tests_verilog = $(addsuffix .verilog, $(tests))
 tests_hex = $(addsuffix .hex, $(tests))
 tests_out = $(addsuffix .out, $(filter rv64%,$(tests)))
 tests32_out = $(addsuffix .out32, $(filter rv32%,$(tests)))
 
 run: $(tests_out) $(tests32_out)
 
-junk += $(tests) $(tests_dump) $(tests_hex) $(tests_out) $(tests32_out)
+junk += $(tests) $(tests_dump) $(tests_hex) $(tests_out) $(tests32_out) $(tests_verilog)
 
 #------------------------------------------------------------
 # Default
