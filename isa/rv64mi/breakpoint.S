@@ -21,7 +21,7 @@ RVTEST_CODE_BEGIN
   la a0, 1f
   csrrw a0, mtvec, a0
   li a1, 0x8
-  csrs tcontrol, a1
+  # csrs tcontrol, a1
 .p2align 2
 1:
   csrw mtvec, a0
